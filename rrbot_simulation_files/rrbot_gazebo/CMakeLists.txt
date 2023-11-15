@@ -8,6 +8,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
+# Generate custom interface
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CalculateJoints.srv"
   DEPENDENCIES geometry_msgs
@@ -24,6 +25,7 @@ ament_target_dependencies(publisher rclcpp std_msgs)
 add_executable(switch src/controller_switch.cpp)
 ament_target_dependencies(switch rclcpp controller_manager_msgs)
 
+# Add server and client
 add_executable(server src/calculate_joints_server.cpp)
 ament_target_dependencies(server rclcpp)
 target_link_libraries(server "${cpp_typesupport_target}")

@@ -27,6 +27,7 @@
   <exec_depend>rrbot_description</exec_depend>
   <exec_depend>xacro</exec_depend>
 
+  <!-- Add for custom srv -->
   <depend>geometry_msgs</depend>
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>
