@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.5)
 project(rrbot_gazebo)
 
 find_package(ament_cmake REQUIRED)
+# find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
+# find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
@@ -11,7 +13,8 @@ find_package(rosidl_default_generators REQUIRED)
 # Generate custom interface
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CalculateJoints.srv"
-  DEPENDENCIES geometry_msgs
+  "srv/MoveToJointPositions.srv"
+  DEPENDENCIES geometry_msgs std_msgs
 )
 
 rosidl_get_typesupport_target(cpp_typesupport_target
@@ -51,4 +54,13 @@ install(DIRECTORY worlds
 install(DIRECTORY config
   DESTINATION share/${PROJECT_NAME}
 )
+
+# ament_python_install_package(scripts)
+
+# install(PROGRAMS
+#   scripts/pd_controller_client.py
+#   scripts/pd_controller_server.py
+#   DESTINATION lib/${PROJECT_NAME}
+# )
+
 ament_package()

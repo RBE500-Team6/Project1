@@ -1,17 +1,19 @@
+#!/usr/bin/env python3
+
 import cmath
 import math
 
 import rclpy
 from geometry_msgs.msg import Pose
 from rclpy.node import Node
-from srv import MoveToJointPositions
+from rrbot_gazebo.srv import MoveToJointPositions
 from std_msgs.msg import Float32, Float32MultiArray, Float64MultiArray, String
 
 
 class pd_controller_service(Node):
     def __init__(self):
 
-        super().__init__('pd controller')
+        super().__init__('pd_controller')
         self.srv = self.create_service(MoveToJointPositions,
                                        'move_to_joint_positions',
                                        self.pd_controller_callback)
@@ -45,8 +47,8 @@ class pd_controller_service(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    pd_controller_service = pd_controller_service()
-    rclpy.spin(pd_controller_service)
+    pd_service = pd_controller_service()
+    rclpy.spin(pd_service)
     rclpy.shutdown()
 
 

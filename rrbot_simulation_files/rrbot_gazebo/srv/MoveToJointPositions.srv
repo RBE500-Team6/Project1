@@ -1,4 +1,4 @@
-Float64MultiArray q_ref
-Float64MultiArray q_measured
+std_msgs/Float64MultiArray q_ref
+std_msgs/Float64MultiArray q_measured
 ---
-Float64MultiArray q_effort
+std_msgs/Float64MultiArray q_effort
