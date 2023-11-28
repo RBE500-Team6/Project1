@@ -1,4 +1,5 @@
 std_msgs/Float64MultiArray q_ref
 std_msgs/Float64MultiArray q_measured
+float32 curr_time
 ---
 std_msgs/Float64MultiArray q_effort
