@@ -40,3 +40,35 @@ ros2 service call /calculate_joints rrbot_gazebo/srv/CalculateJoints "{rrbot_pos
 ```
 
 ![Inverse Kinematics Server-Client](https://github.com/WPI-RBE500-Team6/Project1/assets/1744257/5b2a9a91-79aa-4c16-b49f-1144ebcf6cfa)
+
+# Project 2
+
+Place packages in `rrbot_simulation_files` in your ros2 workspace then build it.
+
+Install dependencies if needed
+
+    rosdep install --from-paths src -y --ignore-src
+
+Install packages
+
+    colcon build --packages-select rrbot_gazebo rrbot_description rrbot_python
+
+Run `rrbot_python`. In the same terminal
+
+    . install/setup.bash
+    ros2 launch rrbot_gazebo rrbot_world.launch.py
+
+In another terminal, run the service:
+
+    . install/setup.bash
+    ros2 run rrbot_python service
+
+In another terminal, run the controller:
+
+    . install/setup.bash
+    ros2 run rrbot_python pd_client 0 0 0.5
+
+In a separate terminal, echo the `/forward_position_controller/commands`:
+
+    . install/setup.bash
+    ros2 topic echo /forward_position_controller/commands

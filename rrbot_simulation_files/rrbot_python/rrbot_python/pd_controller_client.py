@@ -11,7 +11,12 @@ from std_msgs.msg import Float64MultiArray
 
 
 class pd_controller_client(Node):
+
     def __init__(self):
+        """Client for MoveToJointPositions server
+
+        Wait if service not available.
+        """
 
         super().__init__('pd_controller_client')
         self.client = self.create_client(MoveToJointPositions,
@@ -21,6 +26,12 @@ class pd_controller_client(Node):
         self.request = MoveToJointPositions.Request()
 
     def send_request(self, q_ref, q_measured, curr_time):
+        """Return result of request
+
+        Take joint references, the measured joint values and current time.
+        Update request, call asynchronously spinning until result received.
+        """
+
         self.request.q_ref = q_ref
         self.request.q_measured = q_measured
         self.request.curr_time = curr_time
@@ -30,10 +41,15 @@ class pd_controller_client(Node):
 
 
 class pd_controller_pub(Node):
+
     def __init__(self):
+        """Create timer, publisher, client, joint_limit, subscription.
+
+        Initialize q_measured.
+        """
 
         super().__init__('pd_controller_pub')
-        self.sample_time = 0.15  #publish every 150ms
+        self.sample_time = 0.15  # publish every 150ms
         self.timer = self.create_timer(self.sample_time,
                                        self.publish_effort_callback)
 
@@ -43,31 +59,26 @@ class pd_controller_pub(Node):
         self.client = pd_controller_client()
 
         self.q_ref = Float64MultiArray()
-        self.joint_limit = float
+        self.q_measured = Float64MultiArray()
         self.joint_limit = 0.001
 
         self.subscription = self.create_subscription(JointState,
                                                      'joint_states',
                                                      self.q_measured_callback,
                                                      10)
-        self.q_measured = Float64MultiArray()
-        # self.q_measured = None
-        # self.q1_measured = float
-        # self.q2_measured = float
-        # self.q3_measured = float
 
     def curr_time(self):
         return time.monotonic()
 
     def publish_effort_callback(self):
+        """If not within joint limits, send request and publish result of
+        joint efforts
+        """
+
         self.get_logger().info('TIME: %f' % (self.curr_time()))
         if not self.waiting_for_subscriber():
             if not self.joints_within_limits():
                 self.get_logger().info('NOT WITHIN LIMITS')
-                # q_measured = Float64MultiArray()
-                # q_measured.data = [
-                #     self.q1_measured, self.q2_measured, self.q3_measured
-                # ]
                 self.get_logger().info(
                     'MEAS GIV: q1: %f q2: %f q3: %f' %
                     (self.q_measured.data[0], self.q_measured.data[1],
@@ -97,19 +108,9 @@ class pd_controller_pub(Node):
 
     # subscriber callback
     def q_measured_callback(self, msg):
-        # self.q1_measured = msg.position[0]
-        # self.q2_measured = msg.position[1]
-        # self.q3_measured = msg.position[2]
-
         self.q_measured.data = [
             msg.position[0], msg.position[1], msg.position[2]
         ]
-
-        # self.get_logger().info(
-        #     'MEAS ACC: q1: %f q2: %f q3: %f' %
-        #     (self.q_measured.data[0], self.q_measured.data[1],
-        #      self.q_measured.data[2]))
-
 
 def main(args=None):
     rclpy.init(args=args)

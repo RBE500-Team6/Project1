@@ -10,21 +10,28 @@ from rrbot_gazebo.srv import MoveToJointPositions
 
 
 class pd_controller_service(Node):
+
     def __init__(self):
+        """Create a service with custom MoveToJointPositions srv"""
 
         super().__init__('pd_controller_service')
         self.srv = self.create_service(MoveToJointPositions,
                                        'move_to_joint_positions',
                                        self.pd_controller_callback)
-
-        self.Kp = 0.9  #position gain
-        self.Kd = 0.01  #derivative gain
+        self.Kp = 0.9   # position gain
+        self.Kd = 0.01  # derivative gain
         self.last_q_effort = [0.0, 0.0, 0.0]
         self.last_error = [0.0, 0.0, 0.0]
-
         self.last_time = 0.0
 
     def pd_controller_callback(self, request, response):
+        """Calculate U = Kp * e + Kd * edot for each joint
+
+        Use the measured values provided in the request to calculate
+        q_error = q_ref - q_measured. Represent e by q_error. Estimate edot
+        with (q_error - previous_q_error) / change in time
+        """
+
         if self.last_time == 0.0:
             self.last_time = request.curr_time
         self.get_logger().info(
@@ -79,9 +86,8 @@ class pd_controller_service(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-
-    pd_service = pd_controller_service()
-    rclpy.spin(pd_service)
+    pd_service = pd_controller_service()    # Call constructor
+    rclpy.spin(pd_service)                  # Make service continuously available
     rclpy.shutdown()
 
 
