@@ -49,7 +49,7 @@ class pd_controller_pub(Node):
         """
 
         super().__init__('pd_controller_pub')
-        self.sample_time = 0.15  # publish every 150ms
+        self.sample_time = 0.1  # publish every 100ms
         self.timer = self.create_timer(self.sample_time,
                                        self.publish_effort_callback)
 

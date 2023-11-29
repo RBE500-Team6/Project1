@@ -15,6 +15,8 @@ class pd_controller_service(Node):
         """Create a service with custom MoveToJointPositions srv"""
 
         super().__init__('pd_controller_service')
+        self.publisher_ = self.create_publisher(String, 'pos_record', 10)
+        self.record = String()
         self.srv = self.create_service(MoveToJointPositions,
                                        'move_to_joint_positions',
                                        self.pd_controller_callback)
@@ -73,6 +75,10 @@ class pd_controller_service(Node):
 
         self.get_logger().info('effort:  q1: %f q2: %f q3: %f' %
                                (q1_effort, q2_effort, q3_effort))
+        
+        #Give referenced and measured joint values to /pos_record
+        self.record.data = '%f,%f,%f,%f,%f,%f' % (request.q_ref.data[0], request.q_measured.data[0],request.q_ref.data[1], request.q_measured.data[1], request.q_ref.data[2], request.q_measured.data[2])
+        self.publisher_.publish(self.record)
 
         response.q_effort.data = [
             q1_effort + request.q_measured.data[0],
