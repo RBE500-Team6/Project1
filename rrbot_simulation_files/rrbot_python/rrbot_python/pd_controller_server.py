@@ -7,7 +7,6 @@ import rclpy
 from geometry_msgs.msg import Pose
 from rclpy.node import Node
 from rrbot_gazebo.srv import MoveToJointPositions
-from std_msgs.msg import Float32, Float32MultiArray, Float64MultiArray, String
 
 
 class pd_controller_service(Node):
@@ -18,13 +17,17 @@ class pd_controller_service(Node):
                                        'move_to_joint_positions',
                                        self.pd_controller_callback)
 
-        self.Kp = 1.0  #position gain
-        self.Kd = 1.0  #derivative gain
-        # self.last_q_effort = [0.0, 0.0, 0.0]
+        self.Kp = 0.1  #position gain
+        self.Kd = 0.1  #derivative gain
+        self.last_q_effort = [0.0, 0.0, 0.0]
 
         self.last_time = 0.0
 
     def pd_controller_callback(self, request, response):
+        self.get_logger().info(
+            'MEAS:  q1: %f q2: %f q3: %f' %
+            (request.q_measured.data[0], request.q_measured.data[1],
+             request.q_measured.data[2]))
         # calculate each joint's error from measured to reference
         q_error = [(request.q_ref.data[0] - request.q_measured.data[0]),
                    (request.q_ref.data[1] - request.q_measured.data[1]),
@@ -40,9 +43,17 @@ class pd_controller_service(Node):
         # re-set last-time for next function call
         self.last_time = request.curr_time
         # calculate each joint's effort (Kp*error + Kd*(error/dt))
-        q1_effort = (self.Kp * q_error[0]) + (self.Kd * (q_error[0] / self.dt))
-        q2_effort = (self.Kp * q_error[1]) + (self.Kd * (q_error[1] / self.dt))
-        q3_effort = (self.Kp * q_error[2]) + (self.Kd * (q_error[2] / self.dt))
+        if (self.dt > 0):
+            q1_effort = (self.Kp * q_error[0]) + (self.Kd *
+                                                  (q_error[0] / self.dt))
+            q2_effort = (self.Kp * q_error[1]) + (self.Kd *
+                                                  (q_error[1] / self.dt))
+            q3_effort = (self.Kp * q_error[2]) + (self.Kd *
+                                                  (q_error[2] / self.dt))
+        else:
+            q1_effort = self.last_q_effort[0]
+            q2_effort = self.last_q_effort[1]
+            q3_effort = self.last_q_effort[2]
 
         self.get_logger().info('effort:  q1: %f q2: %f q3: %f' %
                                (q1_effort, q2_effort, q3_effort))
@@ -50,6 +61,7 @@ class pd_controller_service(Node):
         response.q_effort.data.append(q1_effort)
         response.q_effort.data.append(q2_effort)
         response.q_effort.data.append(q3_effort)
+        self.last_q_effort = [q1_effort, q2_effort, q3_effort]
         return response
 
 
