@@ -8,7 +8,6 @@ from math import sin, cos
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Float64MultiArray
 
 
 class CalculateVelocitiesService(Node):
@@ -19,7 +18,9 @@ class CalculateVelocitiesService(Node):
         """
 
         super().__init__('calculate_velocities_service')
-        self.q = Float64MultiArray()
+        self.q1 = float()
+        self.q2 = float()
+        self.q3 = float()
         self.subscription = self.create_subscription(JointState,
                                                      "joint_states",
                                                      self.joint_states_callback,
@@ -35,22 +36,20 @@ class CalculateVelocitiesService(Node):
         """Set q attribute of node with joint positions"""
 
         self.get_logger().info(f'joint_states_callback: {msg}')
-        self.q.data = [
-            msg.position[0],
-            msg.position[1],
-            msg.position[2]
-        ]
+        self.q1 = msg.position[0]
+        self.q2 = msg.position[1]
+        self.q3 = msg.position[2]
         return
 
     def jacobian(self):
         """Calculate Jacobian"""
 
-        sigma1 = .5 * sin(self.q.data[0] + self.q.data[1])
-        sigma2 = .5 * cos(self.q.data[0] + self.q.data[1])
+        sigma1 = .5 * sin(self.q1 + self.q2)
+        sigma2 = .5 * cos(self.q1 + self.q2)
         return array([
-            [-sigma1-sin(self.q.data[0]), -sigma1, 0],
-            [sigma2-cos(self.q.data[0]), sigma2, 0],
-            [0, 0, 0],
+            [-sigma1-sin(self.q1), -sigma1, 0],
+            [sigma2-cos(self.q1), sigma2, 0],
+            [0, 0, 1],
             [0, 0, 0],
             [0, 0, 0],
             [1, 1, 0]
@@ -68,31 +67,18 @@ class CalculateVelocitiesService(Node):
         """
 
         self.get_logger().info(f'Request to calculate end effector velocity')
-        msg = ('Request\nq1: {request.q.data[0]} q2: {request.q.data[1]} '
-               'q3: {request.q.data[2]}')
-        self.get_logger().info(msg)
         q = array([
-            [self.q.data[0]],
-            [self.q.data[1]],
-            [self.q.data[2]]
+            [self.q1],
+            [self.q2],
+            [self.q3]
         ])
         twist = matmul(self.jacobian(), q)
-        response.twist.data = [
-            float(twist[0]),
-            float(twist[1]),
-            float(twist[2]),
-            float(twist[3]),
-            float(twist[4]),
-            float(twist[5])
-        ]
-        msg = ('Response\ntwist: {response.twist.data[0]}, '
-               '{response.twist.data[1]} '
-               '{response.twist.data[2]} '
-               '{response.twist.data[3]} '
-               '{response.twist.data[4]} '
-               '{response.twist.data[5]} '
-               '{response.twist.data[6]}')
-        self.get_logger().info(msg)
+        response.twist1 = float(twist[0])
+        response.twist2 = float(twist[1])
+        response.twist3 = float(twist[2])
+        response.twist4 = float(twist[3])
+        response.twist5 = float(twist[4])
+        response.twist6 = float(twist[5])
         return response
 
     def calculate_joint_velocities_callback(self, request, response):
@@ -102,23 +88,18 @@ class CalculateVelocitiesService(Node):
         """
 
         self.get_logger().info(f'Request to calculate joint velocities')
-        self.get_logger().info('Request: twist = [')
-        for value in twist.data:
-            self.get_logger().info(f'{value}\n')
-        self.get_logger().info(']\n')
-        self.get_logger().info(f'q: {self.q.data}')
         twist = array([
-            [request.twist.data[0]],
-            [request.twist.data[1]],
-            [request.twist.data[2]],
-            [request.twist.data[3]],
-            [request.twist.data[4]],
-            [request.twist.data[5]]
+            [request.twist1],
+            [request.twist2],
+            [request.twist3],
+            [request.twist4],
+            [request.twist5],
+            [request.twist6]
         ])
-        q = mulmat(self.pseudoinverse(), twist)
-        response.q.data[0] = q[0]
-        response.q.data[1] = q[1]
-        response.q.data[2] = q[2]
+        q = matmul(self.pseudoinverse(), twist)
+        response.q1 = float(q[0])
+        response.q2 = float(q[1])
+        response.q3 = float(q[2])
         return response
 
 def main():

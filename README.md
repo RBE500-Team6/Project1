@@ -72,3 +72,53 @@ In a separate terminal, echo the `/forward_position_controller/commands`:
 
     . install/setup.bash
     ros2 topic echo /forward_position_controller/commands
+
+# Project 3
+
+1. Before using the node, install numpy
+
+    pip3 install numpy
+
+A node with two services has been added to rrbot_python:
+   * CalculateEndEffectorVelocity
+   * CalculateJointVelocities
+
+After compiling rrbot_gazbeo and rrbot_python, also launch gazebo since the
+service subscribes to the /joint_states topic then launch the rrbot_python
+velocities_service.
+
+    ros2 launch rrbot_gazebo rrbot_world.launch.py
+    ros2 run rrbot_python velocities_service
+
+Make calls to the desired service as follows:
+
+    ros2 service call /calculate_end_effector_velocity rrbot_gazebo/srv/CalculateEndEffectorVelocity "{q1: 100, q2: 300: q3: 50}"
+    ros2 service call /calculate_joint_velocities rrbot_gazebo/srv/CalculateJointVelocities "{twist1: 1.0, twist2: 2.0, twist3: 4.0, twist4: 5.0, twist5: 0.0, twist6: 0.0}"
+
+numpy is used to calculate the pseudoinverse of the Jacobian and multiply the
+matrices:
+
+    def jacobian():
+        """Calculate Jacobian"""
+
+        sigma1 = .5 * sin(q[0] + q[1])
+        sigma2 = .5 * cos(q[0] + q[1])
+        return array([
+            [-sigma1-sin(q[0]), -sigma1, 0],
+            [sigma2-cos(q[0]), sigma2, 0],
+            [0, 0, 1],
+            [0, 0, 0],
+            [0, 0, 0],
+            [1, 1, 0]
+        ])
+
+    def pseudoinverse(self):
+        """Calculate pseudoinverse of the Jacobian"""
+
+        return linalg.pinv(self.jacobian())
+
+Which are used to calculate the values returned from the services:
+* twist  = jacobian * joint_velocities
+* pseudoinverse * twist = joint_velocities
+
+The twist will give us the velocity of the body or end effector velocity.
