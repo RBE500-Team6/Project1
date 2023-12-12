@@ -83,17 +83,18 @@ A node with two services has been added to rrbot_python:
    * CalculateEndEffectorVelocity
    * CalculateJointVelocities
 
-After compiling rrbot_gazbeo and rrbot_python, also launch gazebo since the
-service subscribes to the /joint_states topic then launch the rrbot_python
-velocities_service.
+After compiling rrbot_python, you may wish to launch rviz to manipulate joints since rrbot_python's
+velocities_service subscribes to /joint_states.
 
-    ros2 launch rrbot_gazebo rrbot_world.launch.py
+    # Launch rviz to move joints if desired
+    ros2 launch rrbot_description view_robot.launch.py
+    # Launch velocity service
     ros2 run rrbot_python velocities_service
 
 Make calls to the desired service as follows:
 
-    ros2 service call /calculate_end_effector_velocity rrbot_gazebo/srv/CalculateEndEffectorVelocity "{q1: 100, q2: 300: q3: 50}"
-    ros2 service call /calculate_joint_velocities rrbot_gazebo/srv/CalculateJointVelocities "{twist1: 1.0, twist2: 2.0, twist3: 4.0, twist4: 5.0, twist5: 0.0, twist6: 0.0}"
+    ros2 service call /calculate_end_effector_velocity rrbot_gazebo/srv/CalculateEndEffectorVelocity "{q1: 100.0, q2: 150.0, q3: 50.0}"
+    ros2 service call /calculate_joint_velocities rrbot_gazebo/srv/CalculateJointVelocities "{twist1: -102.29722673047766, twist2: -84.22055273104294, twist3: 50.0, twist4: 0.0, twist5: 0.0, twist6: 250.0}"
 
 numpy is used to calculate the pseudoinverse of the Jacobian and multiply the
 matrices:
@@ -101,8 +102,8 @@ matrices:
     def jacobian():
         """Calculate Jacobian"""
 
-        sigma1 = .5 * sin(q[0] + q[1])
-        sigma2 = .5 * cos(q[0] + q[1])
+        sigma1 = .5 * sin(q[0] + q[1])  # q[0] represents joint q1
+        sigma2 = .5 * cos(q[0] + q[1])  # q[1] represents joint q2
         return array([
             [-sigma1-sin(q[0]), -sigma1, 0],
             [sigma2-cos(q[0]), sigma2, 0],

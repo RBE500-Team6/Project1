@@ -18,7 +18,7 @@ class CalculateVelocitiesService(Node):
         """
 
         super().__init__('calculate_velocities_service')
-        self.q1 = float()
+        self.q1 = float()       # position
         self.q2 = float()
         self.q3 = float()
         self.subscription = self.create_subscription(JointState,
@@ -35,7 +35,8 @@ class CalculateVelocitiesService(Node):
     def joint_states_callback(self, msg):
         """Set q attribute of node with joint positions"""
 
-        self.get_logger().info(f'joint_states_callback: {msg}')
+        self.get_logger().info(f'joint_states_callback: {msg.position[0]} ')
+        self.get_logger().info(f'{msg.position[1]} {msg.position[2]}')
         self.q1 = msg.position[0]
         self.q2 = msg.position[1]
         self.q3 = msg.position[2]
@@ -67,12 +68,12 @@ class CalculateVelocitiesService(Node):
         """
 
         self.get_logger().info(f'Request to calculate end effector velocity')
-        q = array([
-            [self.q1],
-            [self.q2],
-            [self.q3]
+        joint_velocities = array([
+            [request.q1],
+            [request.q2],
+            [request.q3]
         ])
-        twist = matmul(self.jacobian(), q)
+        twist = matmul(self.jacobian(), joint_velocities)
         response.twist1 = float(twist[0])
         response.twist2 = float(twist[1])
         response.twist3 = float(twist[2])
@@ -96,10 +97,10 @@ class CalculateVelocitiesService(Node):
             [request.twist5],
             [request.twist6]
         ])
-        q = matmul(self.pseudoinverse(), twist)
-        response.q1 = float(q[0])
-        response.q2 = float(q[1])
-        response.q3 = float(q[2])
+        joint_velocities = matmul(self.pseudoinverse(), twist)
+        response.q1 = float(joint_velocities[0])
+        response.q2 = float(joint_velocities[1])
+        response.q3 = float(joint_velocities[2])
         return response
 
 def main():
