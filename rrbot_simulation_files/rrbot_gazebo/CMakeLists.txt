@@ -14,6 +14,8 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/CalculateJoints.srv"
   "srv/MoveToJointPositions.srv"
+  "srv/CalculateEndEffectorVelocity.srv"
+  "srv/CalculateJointVelocities.srv"
   DEPENDENCIES geometry_msgs std_msgs
 )
 
