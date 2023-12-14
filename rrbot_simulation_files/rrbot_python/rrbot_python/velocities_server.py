@@ -1,42 +1,40 @@
 #!/usr/bin/env python3
 
-from rrbot_gazebo.srv import CalculateJointVelocities 
-from rrbot_gazebo.srv import CalculateEndEffectorVelocity
-from numpy import array, linalg, matmul
-from math import sin, cos
+from math import cos, sin
 
 import rclpy
+from numpy import array, linalg, matmul
 from rclpy.node import Node
+from rrbot_gazebo.srv import (CalculateEndEffectorVelocity,
+                              CalculateJointVelocities)
 from sensor_msgs.msg import JointState
 
 
 class CalculateVelocitiesService(Node):
-
     def __init__(self):
         """Create instance with services to calculate end effector or joint
         velocities.
         """
 
         super().__init__('calculate_velocities_service')
-        self.q1 = float()       # position
+        self.q1 = float()  # position
         self.q2 = float()
         self.q3 = float()
-        self.subscription = self.create_subscription(JointState,
-                                                     "joint_states",
-                                                     self.joint_states_callback,
-                                                     10)
-        self.end_effector_service = self.create_service(CalculateEndEffectorVelocity,
-                                                        'calculate_end_effector_velocity',
-                                                        self.calculate_end_effector_velocity_callback)
-        self.joints_service = self.create_service(CalculateJointVelocities,
-                                                  'calculate_joint_velocities',
-                                                   self.calculate_joint_velocities_callback)
+        self.subscription = self.create_subscription(
+            JointState, "joint_states", self.joint_states_callback, 10)
+        self.end_effector_service = self.create_service(
+            CalculateEndEffectorVelocity, 'calculate_end_effector_velocity',
+            self.calculate_end_effector_velocity_callback)
+        self.joints_service = self.create_service(
+            CalculateJointVelocities, 'calculate_joint_velocities',
+            self.calculate_joint_velocities_callback)
 
     def joint_states_callback(self, msg):
         """Set q attribute of node with joint positions"""
 
-        self.get_logger().info(f'joint_states_callback: {msg.position[0]} ')
-        self.get_logger().info(f'{msg.position[1]} {msg.position[2]}')
+        self.get_logger().info(
+            'joint_states_callback: %f %f %f' %
+            (msg.position[0], msg.position[1], msg.position[2]))
         self.q1 = msg.position[0]
         self.q2 = msg.position[1]
         self.q3 = msg.position[2]
@@ -47,14 +45,9 @@ class CalculateVelocitiesService(Node):
 
         sigma1 = .5 * sin(self.q1 + self.q2)
         sigma2 = .5 * cos(self.q1 + self.q2)
-        return array([
-            [-sigma1-sin(self.q1), -sigma1, 0],
-            [sigma2-cos(self.q1), sigma2, 0],
-            [0, 0, 1],
-            [0, 0, 0],
-            [0, 0, 0],
-            [1, 1, 0]
-        ])
+        return array([[-sigma1 - sin(self.q1), -sigma1, 0],
+                      [sigma2 - cos(self.q1), sigma2, 0], [0, 0, 1], [0, 0, 0],
+                      [0, 0, 0], [1, 1, 0]])
 
     def pseudoinverse(self):
         """Calculate pseudoinverse of the Jacobian"""
@@ -68,11 +61,7 @@ class CalculateVelocitiesService(Node):
         """
 
         self.get_logger().info(f'Request to calculate end effector velocity')
-        joint_velocities = array([
-            [request.q1],
-            [request.q2],
-            [request.q3]
-        ])
+        joint_velocities = array([[request.q1], [request.q2], [request.q3]])
         twist = matmul(self.jacobian(), joint_velocities)
         response.twist1 = float(twist[0])
         response.twist2 = float(twist[1])
@@ -89,19 +78,14 @@ class CalculateVelocitiesService(Node):
         """
 
         self.get_logger().info(f'Request to calculate joint velocities')
-        twist = array([
-            [request.twist1],
-            [request.twist2],
-            [request.twist3],
-            [request.twist4],
-            [request.twist5],
-            [request.twist6]
-        ])
+        twist = array([[request.twist1], [request.twist2], [request.twist3],
+                       [request.twist4], [request.twist5], [request.twist6]])
         joint_velocities = matmul(self.pseudoinverse(), twist)
         response.q1 = float(joint_velocities[0])
         response.q2 = float(joint_velocities[1])
         response.q3 = float(joint_velocities[2])
         return response
+
 
 def main():
     rclpy.init()

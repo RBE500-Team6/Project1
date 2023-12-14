@@ -7,10 +7,10 @@ import rclpy
 from geometry_msgs.msg import Pose
 from rclpy.node import Node
 from rrbot_gazebo.srv import MoveToJointPositions
+from std_msgs.msg import String
 
 
 class pd_controller_service(Node):
-
     def __init__(self):
         """Create a service with custom MoveToJointPositions srv"""
 
@@ -20,7 +20,7 @@ class pd_controller_service(Node):
         self.srv = self.create_service(MoveToJointPositions,
                                        'move_to_joint_positions',
                                        self.pd_controller_callback)
-        self.Kp = 0.9   # position gain
+        self.Kp = 0.9  # position gain
         self.Kd = 0.01  # derivative gain
         self.last_q_effort = [0.0, 0.0, 0.0]
         self.last_error = [0.0, 0.0, 0.0]
@@ -75,9 +75,12 @@ class pd_controller_service(Node):
 
         self.get_logger().info('effort:  q1: %f q2: %f q3: %f' %
                                (q1_effort, q2_effort, q3_effort))
-        
+
         #Give referenced and measured joint values to /pos_record
-        self.record.data = '%f,%f,%f,%f,%f,%f' % (request.q_ref.data[0], request.q_measured.data[0],request.q_ref.data[1], request.q_measured.data[1], request.q_ref.data[2], request.q_measured.data[2])
+        self.record.data = '%f,%f,%f,%f,%f,%f' % (
+            request.q_ref.data[0], request.q_measured.data[0],
+            request.q_ref.data[1], request.q_measured.data[1],
+            request.q_ref.data[2], request.q_measured.data[2])
         self.publisher_.publish(self.record)
 
         response.q_effort.data = [
@@ -92,8 +95,8 @@ class pd_controller_service(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    pd_service = pd_controller_service()    # Call constructor
-    rclpy.spin(pd_service)                  # Make service continuously available
+    pd_service = pd_controller_service()  # Call constructor
+    rclpy.spin(pd_service)  # Make service continuously available
     rclpy.shutdown()
 
 

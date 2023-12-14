@@ -11,7 +11,6 @@ from std_msgs.msg import Float64MultiArray
 
 
 class pd_controller_client(Node):
-
     def __init__(self):
         """Client for MoveToJointPositions server
 
@@ -41,7 +40,6 @@ class pd_controller_client(Node):
 
 
 class pd_controller_pub(Node):
-
     def __init__(self):
         """Create timer, publisher, client, joint_limit, subscription.
 
@@ -95,15 +93,17 @@ class pd_controller_pub(Node):
 
     # checks that q1, q2, and q3 are "close enough" to goal. can lower limit as controller gets better
     def joints_within_limits(self):
-        q1_within_limits = (abs(self.q_ref.data[0] - self.joint_limit) <= abs(
-            self.q_measured.data[0]) <=
-                            abs(self.q_ref.data[0] + self.joint_limit))
-        q2_within_limits = (abs(self.q_ref.data[1] - self.joint_limit) <= abs(
-            self.q_measured.data[1]) <=
-                            abs(self.q_ref.data[1] + self.joint_limit))
-        q3_within_limits = (abs(self.q_ref.data[2] - self.joint_limit) <= abs(
-            self.q_measured.data[2]) <=
-                            abs(self.q_ref.data[2] + self.joint_limit))
+        if (len(self.q_measured.data) > 0):
+            self.get_logger().info('ARRAY SIZE %i' % len(self.q_measured.data))
+            q1_within_limits = (abs(self.q_ref.data[0] - self.joint_limit) <=
+                                abs(self.q_measured.data[0]) <=
+                                abs(self.q_ref.data[0] + self.joint_limit))
+            q2_within_limits = (abs(self.q_ref.data[1] - self.joint_limit) <=
+                                abs(self.q_measured.data[1]) <=
+                                abs(self.q_ref.data[1] + self.joint_limit))
+            q3_within_limits = (abs(self.q_ref.data[2] - self.joint_limit) <=
+                                abs(self.q_measured.data[2]) <=
+                                abs(self.q_ref.data[2] + self.joint_limit))
         return q1_within_limits and q2_within_limits and q3_within_limits
 
     # subscriber callback
@@ -111,6 +111,7 @@ class pd_controller_pub(Node):
         self.q_measured.data = [
             msg.position[0], msg.position[1], msg.position[2]
         ]
+
 
 def main(args=None):
     rclpy.init(args=args)
