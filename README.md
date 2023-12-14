@@ -123,3 +123,15 @@ Which are used to calculate the values returned from the services:
 * pseudoinverse * twist = joint_velocities
 
 The twist will give us the velocity of the body or end effector velocity.
+
+2.
+Start Gazebo using:
+    ros2 launch rrbot_gazebo rrbot_world.launch.py
+  
+In a new window, run the velocity service with the command:
+    ros2 run rrbot_python velocities_service
+
+Open another window, and run the controller node with the command:
+    ros2 run rrbot_python pi_controller 0 1 0 0 0 0  # vx vy vz wx wy wz respectively
+
+     
