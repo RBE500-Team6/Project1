@@ -22,6 +22,7 @@ setup(
             'pd_service = rrbot_python.pd_controller_server:main',
             'pd_client = rrbot_python.pd_controller_client:main',
             'velocities_service = rrbot_python.velocities_server:main',
+            'pi_controller = rrbot_python.pi_controller:main',
         ],
     },
 )
