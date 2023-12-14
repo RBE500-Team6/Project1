@@ -127,8 +127,8 @@ class pi_controller_pub(Node):
                 ref2 = self.qvel_ref.data[1]
                 ref3 = self.qvel_ref.data[2]
                 
-                self.get_logger().info('qvm1: %f' % (self.qvel_ref.data[1]))
-                self.get_logger().info('int1: %f' % (Kp*err[0])
+                #self.get_logger().info('qvm1: %f' % (self.qvel_ref.data[1]))
+                #self.get_logger().info('int1: %f' % (Kp*err[0]))
                 #self.get_logger().info('qv_meas3: %f' % (self.qvel_measured.data[2]))
                 #self.get_logger().info('===PUBLISHED EFFORT: %f %f %f' % (self.qv_effort.data[0],
                                        #self.qv_effort.data[1], self.qv_effort.data[2]))
