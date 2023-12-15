@@ -61,14 +61,16 @@ class pi_controller_pub(Node):
 
         self.subscription = self.create_subscription(
             JointState, 'joint_states', self.qvel_measured_callback, 10)
+        self.vel_recorder = self.create_publisher(String, 'vel_record', 10)
+        self.record = String()
 
     def curr_time(self):
         return time.monotonic()
 
     def publish_effort_callback(self):
 
-        Ki = 0.1
-        Kp = 0.2
+        Ki = 2.1
+        Kp = 0.7
         twist1 = self.twist.data[0]
         twist2 = self.twist.data[1]
         twist3 = self.twist.data[2]
@@ -87,6 +89,10 @@ class pi_controller_pub(Node):
                     'MEAS GIV: v1: %f v2: %f v3: %f' %
                     (self.qvel_measured.data[0], self.qvel_measured.data[1],
                      self.qvel_measured.data[2]))
+                self.get_logger().info(
+                    'REF GIV: v1: %f v2: %f v3: %f' %
+                    (self.qvel_ref.data[0], self.qvel_ref.data[1],
+                     self.qvel_ref.data[2]))
                 result = self.pi_client.send_request(twist1, twist2, twist3,
                                                      twist4, twist5, twist6)
                 self.qvel_ref.data[0] = result.q1
@@ -98,7 +104,7 @@ class pi_controller_pub(Node):
                        (self.qvel_ref.data[2] - self.qvel_measured.data[2])]
                 self.c_time = time.monotonic()
                 self.dt = self.c_time - self.last_time
-                self.last_time = time.monotonic()
+                self.last_time = self.c_time
 
                 self.integral1 += (Ki * err[0] * self.dt)
                 self.integral2 += (Ki * err[1] * self.dt)
@@ -115,6 +121,14 @@ class pi_controller_pub(Node):
 
                 self.last_err = err
 
+                #Give referenced and measured joint values to /vel_record
+                self.record.data = ",%f,%f,%f,%f,%f,%f,%f," % (
+                    self.curr_time(), self.qvel_ref.data[0],
+                    self.qvel_measured.data[0], self.qvel_ref.data[1],
+                    self.qvel_measured.data[1], self.qvel_ref.data[2],
+                    self.qvel_measured.data[2])
+                self.vel_recorder.publish(self.record)
+
                 self.pub_effort.data = [qv1_effort, qv2_effort, qv3_effort]
                 self.publisher_.publish(self.pub_effort)
                 #self.get_logger().info('qvm1 size: %f' % (len(self.qvel_measured.data)))
@@ -125,8 +139,8 @@ class pi_controller_pub(Node):
                 #self.get_logger().info('qvm1: %f' % (self.qvel_ref.data[1]))
                 #self.get_logger().info('int1: %f' % (Kp*err[0]))
                 #self.get_logger().info('qv_meas3: %f' % (self.qvel_measured.data[2]))
-                #self.get_logger().info('===PUBLISHED EFFORT: %f %f %f' % (self.qv_effort.data[0],
-                #self.qv_effort.data[1], self.qv_effort.data[2]))
+                self.get_logger().info('===PUBLISHED EFFORT: %f %f %f' %
+                                       (qv1_effort, qv2_effort, qv3_effort))
                 self.last_qv_effort = self.pub_effort.data
                 self.check = 1
             else:
